@@ -34,7 +34,7 @@ def main():
             image_file = os.path.join('images', 'Note.jpg')
             GetTextRead(cv_client, image_file)
         elif command == '3':
-            pdf_file = os.path.join('documents', 'Document.pdf')
+            pdf_file = os.path.join('documents', 'Doc.pdf')
             ExtractTextFromPDF(cv_client, pdf_file)
         else:
             print("Exiting...")
