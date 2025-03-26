@@ -5,107 +5,90 @@ from PIL import Image, ImageDraw
 from matplotlib import pyplot as plt
 
 # Import namespaces
-# import namespaces
 from azure.ai.vision.imageanalysis import ImageAnalysisClient
 from azure.ai.vision.imageanalysis.models import VisualFeatures
 from azure.core.credentials import AzureKeyCredential
 
 
 def main():
-
-    global cv_client
-
     try:
         # Get Configuration Settings
         load_dotenv()
         ai_endpoint = os.getenv('AI_SERVICE_ENDPOINT')
         ai_key = os.getenv('AI_SERVICE_KEY')
 
-        
-        # Authenticate Azure AI Vision client
         # Authenticate Azure AI Vision client
         cv_client = ImageAnalysisClient(
             endpoint=ai_endpoint,
             credential=AzureKeyCredential(ai_key)
         )
-        
-        print(cv_client)
+       
         # Menu for text reading functions
         print('\n1: Use Read API for image (Lincoln.jpg)\n2: Read handwriting (Note.jpg)\nAny other key to quit\n')
         command = input('Enter a number:')
+       
         if command == '1':
-            image_file = os.path.join('images','Lincoln.jpg')
-            GetTextRead(image_file)
-        elif command =='2':
-            # image_file = os.path.join('images','Note.jpg')
-            image_file= 'images\Lincoln.jpg'
-            print(image_file)
-            
-
-            GetTextRead(image_file)
-                
+            image_file = os.path.join('images', 'Lincoln.jpg')
+            GetTextRead(cv_client, image_file)
+        elif command == '2':
+            image_file = os.path.join('images', 'Note.jpg')
+            GetTextRead(cv_client, image_file)
+        else:
+            print("Exiting...")
 
     except Exception as ex:
-        print(ex)
+        print(f"Error in main: {ex}")
 
-def GetTextRead(image_file):
+def GetTextRead(cv_client, image_file):
     print('\n')
 
-
-    # Open image file
-    with open(image_file, "rb") as f:
+    try:
+        # Open image file
+        with open(image_file, "rb") as f:
             image_data = f.read()
-            print(f)
 
-    
-    # # Use Analyze image function to read text in image
-    # result = cv_client.analyze(
-    #     image_data=image_data,
-    #     visual_features=[VisualFeatures.READ]
-   
-    # print(result)
-    # Display the image and overlay it with the extracted text
-    if result.read is not None:
-        print("\nText:")
+        # Use Analyze image function to read text in image
+        result = cv_client.analyze(
+            image_data=image_data,
+            visual_features=[VisualFeatures.READ]
+        )
 
-        # Prepare image for drawing
-        image = Image.open(image_file)
-        fig = plt.figure(figsize=(image.width/100, image.height/100))
-        plt.axis('off')
-        draw = ImageDraw.Draw(image)
-        color = 'cyan'
+        # Display the image and overlay it with the extracted text
+        if result.read is not None:
+            print("\nText:")
 
-        for line in result.read.blocks[0].lines:
-            # Return the text detected in the image
-            # Return the text detected in the image
-            print(f"  {line.text}")    
+            # Prepare image for drawing
+            image = Image.open(image_file)
+            fig = plt.figure(figsize=(image.width/100, image.height/100))
+            plt.axis('off')
+            draw = ImageDraw.Draw(image)
+            color = 'cyan'
 
-            drawLinePolygon = True
+            for line in result.read.blocks[0].lines:
+                # Print the detected text
+                print(f"  {line.text}")    
 
-            r = line.bounding_polygon
-            bounding_polygon = ((r[0].x, r[0].y),(r[1].x, r[1].y),(r[2].x, r[2].y),(r[3].x, r[3].y))
+                # Get the bounding polygon for the line
+                r = line.bounding_polygon
+                bounding_polygon = ((r[0].x, r[0].y), (r[1].x, r[1].y),
+                                  (r[2].x, r[2].y), (r[3].x, r[3].y))
 
-            # Return the position bounding box around each line
-
-
-            # Return each word detected in the image and the position bounding box around each word with the confidence level of each word
-
-
-            # Draw line bounding polygon
-            if drawLinePolygon:
+                # Draw line bounding polygon
                 draw.polygon(bounding_polygon, outline=color, width=3)
          
-        # Save image
-        plt.imshow(image)
-        plt.tight_layout(pad=0)
-        outputfile = 'text.jpg'
-        fig.savefig(outputfile)
-        print('\n  Results saved in', outputfile)
+            # Save image
+            plt.imshow(image)
+            plt.tight_layout(pad=0)
+            outputfile = 'text.jpg'
+            fig.savefig(outputfile)
+            print('\n  Results saved in', outputfile)
+        else:
+            print("No text was detected in the image.")
 
-    
-    
-
-
+    except FileNotFoundError:
+        print(f"Error: Image file '{image_file}' not found.")
+    except Exception as ex:
+        print(f"Error processing image: {ex}")
 
 if __name__ == "__main__":
     main()
