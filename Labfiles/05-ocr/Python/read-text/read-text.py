@@ -21,6 +21,7 @@ def main():
         ai_endpoint = os.getenv('AI_SERVICE_ENDPOINT')
         ai_key = os.getenv('AI_SERVICE_KEY')
 
+        
         # Authenticate Azure AI Vision client
         # Authenticate Azure AI Vision client
         cv_client = ImageAnalysisClient(
@@ -28,7 +29,7 @@ def main():
             credential=AzureKeyCredential(ai_key)
         )
         
-
+        print(cv_client)
         # Menu for text reading functions
         print('\n1: Use Read API for image (Lincoln.jpg)\n2: Read handwriting (Note.jpg)\nAny other key to quit\n')
         command = input('Enter a number:')
@@ -36,7 +37,11 @@ def main():
             image_file = os.path.join('images','Lincoln.jpg')
             GetTextRead(image_file)
         elif command =='2':
-            image_file = os.path.join('images','Note.jpg')
+            # image_file = os.path.join('images','Note.jpg')
+            image_file= 'images\Lincoln.jpg'
+            print(image_file)
+            
+
             GetTextRead(image_file)
                 
 
@@ -46,17 +51,19 @@ def main():
 def GetTextRead(image_file):
     print('\n')
 
+
     # Open image file
     with open(image_file, "rb") as f:
             image_data = f.read()
+            print(f)
 
     
-    # Use Analyze image function to read text in image
-    result = cv_client.analyze(
-        image_data=image_data,
-        visual_features=[VisualFeatures.READ]
-    )
-
+    # # Use Analyze image function to read text in image
+    # result = cv_client.analyze(
+    #     image_data=image_data,
+    #     visual_features=[VisualFeatures.READ]
+   
+    # print(result)
     # Display the image and overlay it with the extracted text
     if result.read is not None:
         print("\nText:")
@@ -87,8 +94,7 @@ def GetTextRead(image_file):
             # Draw line bounding polygon
             if drawLinePolygon:
                 draw.polygon(bounding_polygon, outline=color, width=3)
-
-            
+         
         # Save image
         plt.imshow(image)
         plt.tight_layout(pad=0)
